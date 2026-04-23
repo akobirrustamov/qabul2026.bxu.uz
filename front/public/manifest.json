@@ -1,0 +1,25 @@
+{
+  "short_name": "BXU Qabul",
+  "name": "BXU Qabul — Buxoro Xalqaro Universiteti",
+  "icons": [
+    {
+      "src": "logonew.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "logonew.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logonew.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0056b3",
+  "background_color": "#ffffff"
+}

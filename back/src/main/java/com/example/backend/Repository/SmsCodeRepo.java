@@ -1,0 +1,23 @@
+package com.example.backend.Repository;
+
+import com.example.backend.Entity.SmsCode;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface SmsCodeRepo extends JpaRepository<SmsCode,Integer> {
+
+
+    @Query(value = "SELECT * FROM sms_code WHERE abuturient_id = :abuturientId", nativeQuery = true)
+    Optional<SmsCode> findByAbuturientId(UUID abuturientId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM SmsCode s WHERE s.abuturient.id = :abuturientId")
+    void deleteByAbuturient_Id(@Param("abuturientId") UUID abuturientId);
+}

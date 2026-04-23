@@ -1,0 +1,21 @@
+User-agent: *
+
+# Hammasini ruxsat beramiz
+Allow: /
+
+# API lar Google’da chiqmasin
+Disallow: /api/
+
+# Shaxsiy kabinet index bo‘lmasin
+Disallow: /cabinet
+
+# Test va result (agar private bo‘lsa)
+Disallow: /result
+Disallow: /test
+
+# Dynamic linklar (agar bo‘lsa)
+Disallow: /card/
+Disallow: /:agentId
+
+# Sitemap manzili
+Sitemap: https://qabul.bxu.uz/sitemap.xml
