@@ -66,7 +66,7 @@ function BgImage() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       startTimer();
       setMessage("SMS qayta yuborildi!");
@@ -92,7 +92,7 @@ function BgImage() {
           "Content-Type": "application/x-www-form-urlencoded",
           "X-Forwarded-For": ip,
         },
-        false
+        false,
       );
       localStorage.setItem("browser_token", response.data);
     } catch (error) {
@@ -108,6 +108,8 @@ function BgImage() {
 
   const getPhoneData = async (response) => {
     const data = response.data;
+    console.log(data);
+
     if (!data) {
       navigate("/");
     } else {
@@ -155,48 +157,14 @@ function BgImage() {
         "POST",
         obj,
         null,
-        true
+        true,
       );
-      if (response.data.status !== 0) {
-        await getPhoneData(response);
-      }
+      await getPhoneData(response);
       setAbuturientId(response.data.id);
-      setShowSmsInput(true);
       startTimer();
     } catch (error) {
       console.error("Error saving data:", error);
       setMessage(error?.response?.data?.message || "Xatolik yuz berdi!");
-      setOpen(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifySmsCode = async () => {
-    setLoading(true);
-    try {
-      const response = await ApiCall(
-        `/api/v1/sms/${abuturientId}/${smsCode}`,
-        "GET",
-        null,
-        null,
-        true
-      );
-      console.log(response.data);
-
-      if (response.data.phone == tel) {
-        await getPhoneData(response);
-        setShowSmsInput(false);
-      } else {
-        setMessage("Noto'g'ri SMS kodi kiritildi!");
-        setOpen(true);
-      }
-    } catch (error) {
-      console.error("Error verifying SMS code:", error);
-      setMessage(
-        error?.response?.data?.message ||
-          "Xatolik yuz berdi. SMS kod noto'g'ri!"
-      );
       setOpen(true);
     } finally {
       setLoading(false);
@@ -225,10 +193,12 @@ function BgImage() {
                 <h3 className="text-base font-semibold text-[#737373]">
                   Savollaringiz bo'lsa, bog'laning: +998 55 309 99 99
                   <br />
-                   Sizga omad tilaymiz!
+                  Sizga omad tilaymiz!
                 </h3>
-                 <form onSubmit={handleSave} className="space-y-3 md:px-20 mt-4">
-                  <p className="text-sm text-[#050929] font-bold mb-1 text-left">Telefon raqami</p>
+                <form onSubmit={handleSave} className="space-y-3 md:px-20 mt-4">
+                  <p className="text-sm text-[#050929] font-bold mb-1 text-left">
+                    Telefon raqami
+                  </p>
                   <div className="relative">
                     <input
                       type="text"
@@ -243,7 +213,9 @@ function BgImage() {
 
                   {showSmsInput && (
                     <div className="pt-2 animate-fade-in">
-                      <p className="text-sm text-[#050929] font-bold mb-1 text-left">SMS kod</p>
+                      <p className="text-sm text-[#050929] font-bold mb-1 text-left">
+                        SMS kod
+                      </p>
                       <div className="relative flex items-center">
                         <input
                           type="text"
@@ -266,7 +238,9 @@ function BgImage() {
                           disabled={isTimerActive}
                           className={`text-sm ${isTimerActive ? "text-gray-400" : "text-[#213972] underline"}`}
                         >
-                          {isTimerActive ? `Qayta yuborish (${timer}s)` : "Kodni qayta yuborish"}
+                          {isTimerActive
+                            ? `Qayta yuborish (${timer}s)`
+                            : "Kodni qayta yuborish"}
                         </button>
                       </div>
                     </div>
@@ -277,7 +251,7 @@ function BgImage() {
                       type="submit"
                       onClick={() => setIsDtm(false)}
                       disabled={showSmsInput && isTimerActive}
-                      className={`bg-[#213972] text-white py-2 px-4 rounded-lg transition ${(showSmsInput && isTimerActive) ? "opacity-50 cursor-not-allowed" : "hover:bg-[#1a2c5f]"}`}
+                      className={`bg-[#213972] text-white py-2 px-4 rounded-lg transition ${showSmsInput && isTimerActive ? "opacity-50 cursor-not-allowed" : "hover:bg-[#1a2c5f]"}`}
                     >
                       Ro'yxatdan o'tish
                     </button>
@@ -290,20 +264,7 @@ function BgImage() {
                       DTM bali bilan talaba bo'lish
                     </button> */}
                   </div>
-
-                  {showSmsInput && (
-                    <div className="flex justify-end pt-2">
-                      <button
-                        type="button"
-                        onClick={verifySmsCode}
-                        disabled={smsCode.length !== 4}
-                        className={`bg-green-600 text-white py-2 px-4 rounded-lg transition ${smsCode.length !== 4 ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}
-                      >
-                        Tasdiqlash
-                      </button>
-                    </div>
-                  )}
-               </form>
+                </form>
                 {/*<h1 class="text-4xl font-extrabold text-center bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">*/}
                 {/*  2025-2026 o'quv yili qabul jarayoni tugadi*/}
                 {/*</h1>*/}
@@ -381,8 +342,8 @@ function BgImage() {
                         {step === 1
                           ? "Telefon raqam"
                           : step === 2
-                          ? "Ma'lumotnoma"
-                          : "Yo'nalish tanlash"}
+                            ? "Ma'lumotnoma"
+                            : "Yo'nalish tanlash"}
                       </span>
                     </div>
                     {index < 2 && (

@@ -376,7 +376,7 @@ public class AbuturientController {
         }
         try {
 
-            Abuturient abuturient = new Abuturient(request.getPhone(), agent, 1, LocalDateTime.now(), contractNumber());
+            Abuturient abuturient = new Abuturient(request.getPhone(), agent, 0, LocalDateTime.now(), contractNumber());
             abuturient.setIsDtm(request.getIsDtm());
             Abuturient save = abuturientRepo.save(abuturient);
             CrmCategory crmCategory = crmCategoryRepo.findBySortOrder(1).orElseThrow();
@@ -695,7 +695,7 @@ public class AbuturientController {
         }
 
         CrmCategory crmCategory = crmCategoryRepo.findBySortOrder(1).orElseThrow();
-        CrmSubCategory crmSubCategory = crmSubCategoryRepo.findBySortOrderAndCategoryId(crmCategory.getId(), 6).orElseThrow();
+        CrmSubCategory crmSubCategory = crmSubCategoryRepo.findBySortOrderAndCategoryId(crmCategory.getId(), 5).orElseThrow();
         Optional<CrmLead> crmLead = crmLeadRepo.findByApplicantId(abuturient.getId());
         if (crmLead.isEmpty()) {
             throw new RuntimeException("Lead is required");

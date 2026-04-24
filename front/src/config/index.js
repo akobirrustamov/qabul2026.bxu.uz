@@ -1,9 +1,9 @@
 import axios from "axios";
 export let baseUrl;
-baseUrl = "http://localhost:8080";
+// baseUrl = "http://localhost:8080";
 // baseUrl = "https://qabul.bxu.uz";
-// baseUrl = "";
-export default function (url, method, data, param, is_user = false) {
+baseUrl = "";
+export default function (url, method, data, param, is_user) {
   let token = localStorage.getItem("access_token");
 
   return axios({
@@ -27,11 +27,16 @@ export default function (url, method, data, param, is_user = false) {
       if (err.response && err.response.status === 401) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        window.location.href = "/admin/login"; // 🔥 redirect
+        window.location.href = "/";
         return {
           error: true,
           data: 401,
         };
       }
+
+      return {
+        error: true,
+        data: err.response?.data,
+      };
     });
 }

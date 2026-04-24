@@ -114,7 +114,7 @@ public class MyFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-
+        System.out.println(request.getRequestURI());
         if (isPublicPath(request)) {
             filterChain.doFilter(request, response);
             return;
