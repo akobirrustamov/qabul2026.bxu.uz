@@ -960,7 +960,7 @@ export default function LeadModal({
                     {agentName}
                   </span>
                 )}
-                {score > 45 && (
+                {editForm.passportPin && (
                   <button
                     onClick={() => handleDownloadPDF(editForm.phone, true)}
                     className="ml-2 flex items-center gap-1 rounded-md bg-green-500 px-2 py-1 text-[11px] text-white hover:bg-green-600"

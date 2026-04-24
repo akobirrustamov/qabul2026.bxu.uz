@@ -28,8 +28,8 @@ import java.util.Optional;
 public class SipuniServiceImpl implements SipuniService {
     private final UserRepo userRepo;
 
-    private static final String SECRET = "0.9hvr22lm18";
-    private static final String USER   = "045419";
+    private static final String SECRET = "0.uo75nch9zh";
+    private static final String USER   = "086633";
     private static final String API_URL = "https://sipuni.com/api/statistic/export";
 
     @Override

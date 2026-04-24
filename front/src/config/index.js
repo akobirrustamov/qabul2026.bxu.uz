@@ -5,24 +5,18 @@ baseUrl = "http://localhost:8080";
 // baseUrl = "";
 export default function (url, method, data, param, is_user = false) {
   let token = localStorage.getItem("access_token");
-  // console.log(is_user)
-  if (is_user) {
-    token = localStorage.getItem("browser_token");
-    // console.log(token)
-  }
-  // console.log(param)
+
   return axios({
     url: baseUrl + url,
     method: method,
     data: data,
     headers: {
-      Authorization: token,
+      Authorization: `Bearer ${token}`,
     },
     params: param,
   })
     .then((res) => {
       if (res.data) {
-        // console.log(res.data)
         return {
           error: false,
           data: res.data,
@@ -30,13 +24,14 @@ export default function (url, method, data, param, is_user = false) {
       }
     })
     .catch((err) => {
-      if (err.response.status === 401) {
-        if (localStorage.getItem("refresh_token") === null) {
-          return {
-            error: true,
-            data: err.response.status,
-          };
-        }
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        window.location.href = "/admin/login"; // 🔥 redirect
+        return {
+          error: true,
+          data: 401,
+        };
       }
     });
 }
