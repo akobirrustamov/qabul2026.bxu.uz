@@ -526,14 +526,14 @@ function Appeals() {
     if (educationTypeId) fetchEducationForm(educationTypeId);
     if (educationFormId) fetchEducationField(educationFormId);
     setEditData({
-      id: appeal.id,
-      passportPin: appeal.passportPin || "",
-      passportNumber: appeal.passportNumber || "",
-      firstName: appeal.firstName || "",
-      lastName: appeal.lastName || "",
-      fatherName: appeal.fatherName || "",
-      motherName: appeal.motherName || "",
-      appealTypeId: appeal.appealType?.id || "",
+      id: appeal?.id,
+      passportPin: appeal?.passportPin || "",
+      passportNumber: appeal?.passportNumber || "",
+      firstName: appeal?.firstName || "",
+      lastName: appeal?.lastName || "",
+      fatherName: appeal?.fatherName || "",
+      motherName: appeal?.motherName || "",
+      appealTypeId: appeal?.appealType?.id || "",
       educationTypeId,
       educationFormId,
       educationFieldId,
@@ -541,12 +541,13 @@ function Appeals() {
     setDocumentStatus(
       documentLists.find((o) => o.value === appeal.documentStatus) || null,
     );
-    const ex = extraData.find(
-      (e) =>
-        e.abuturient.firstName === appeal.firstName &&
-        e.abuturient.lastName === appeal.lastName,
+    const matchedExtra = extraData.find(
+      (extra) =>
+        extra.abuturient?.firstName === appeal?.firstName &&
+        extra.abuturient?.lastName === appeal?.lastName,
     );
-    setDescription(ex?.description || "");
+
+    setDescription(matchedExtra?.description || "");
     setEditModalOpen(true);
   };
 

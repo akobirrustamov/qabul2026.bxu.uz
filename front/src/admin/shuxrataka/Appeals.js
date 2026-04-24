@@ -649,14 +649,14 @@ function Appeals() {
 
     // Set edit data
     setEditData({
-      id: appeal.id,
-      passportPin: appeal.passportPin || "",
-      passportNumber: appeal.passportNumber || "",
-      firstName: appeal.firstName || "",
-      lastName: appeal.lastName || "",
-      fatherName: appeal.fatherName || "",
-      motherName: appeal.motherName || "",
-      appealTypeId: appeal.appealType?.id || "",
+      id: appeal?.id,
+      passportPin: appeal?.passportPin || "",
+      passportNumber: appeal?.passportNumber || "",
+      firstName: appeal?.firstName || "",
+      lastName: appeal?.lastName || "",
+      fatherName: appeal?.fatherName || "",
+      motherName: appeal?.motherName || "",
+      appealTypeId: appeal?.appealType?.id || "",
       educationTypeId,
       educationFormId,
       educationFieldId,
@@ -665,16 +665,13 @@ function Appeals() {
     const matchedStatus = documentLists.find(
       (opt) => opt.value === appeal.documentStatus,
     );
-    
+
     setDocumentStatus(matchedStatus || null);
-    console.log(appeal);
-    
+
     const matchedExtra = extraData.find(
       (extra) =>
-        "" === appeal.firstName &&
-        "" === appeal.lastName,
-        // extra.abuturient.firstName === appeal.firstName &&
-        // extra.abuturient.lastName === appeal.lastName,
+        extra.abuturient?.firstName === appeal?.firstName &&
+        extra.abuturient?.lastName === appeal?.lastName,
     );
 
     setDescription(matchedExtra?.description || "");
