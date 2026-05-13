@@ -79,6 +79,7 @@ import Appeals2025 from "./admin/superadmin/Appeals2025";
 import CrmCategories from "./admin/superadmin/crm-category/crm-category";
 import CrmSubCategories from "./admin/superadmin/crm-category/crm-sub-category";
 import CrmRemider from "./admin/superadmin/lead-modal/Remider";
+import Users from "./admin/superadmin/user/Users";
 
 // operator (accountant)
 import AppealsOperator from "./admin/operator/Appeals";
@@ -160,6 +161,7 @@ function App() {
         <Route path={"/main/appeal"} element={<MyAppealsWorker />} />
         <Route path={"/main/contract"} element={<Contract />} />
         <Route path={"/main/sms-templates"} element={<SmsTemplates />} />
+        <Route path={"/main/users"} element={<Users />} />
         <Route
           path={"/main/transform-education"}
           element={<MyPagesTransformEducationWorker />}
@@ -326,7 +328,10 @@ function App() {
         />
         <Route path={"/operator"} element={<OperatorCabinet2 />} />
         <Route path={"/operator/leads/:id"} element={<OperatorLeads />} />
-        <Route path={"/operator/crm-remider"} element={<OperatorCrmRemider />} />
+        <Route
+          path={"/operator/crm-remider"}
+          element={<OperatorCrmRemider />}
+        />
       </Routes>
     </div>
   );

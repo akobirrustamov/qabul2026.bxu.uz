@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -205,8 +205,20 @@ function Appeals() {
   const [showFilter, setShowFilter] = useState(false);
   const [admin, setAdmin] = useState();
   const [extraData, setExtraData] = useState([]);
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
 
   const token = localStorage.getItem("access_token");
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   /* modals */
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -471,10 +483,17 @@ function Appeals() {
 
   /* ════ pdf ════ */
   const handleDownloadPDF = async (phone) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
     try {
       const res = await fetch(
-        `${baseUrl}/api/v1/abuturient/contract/${phone}`,
-        { method: "GET" },
+        `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
       if (!res.ok) throw new Error();
       const blob = await res.blob();

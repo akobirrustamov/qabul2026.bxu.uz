@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -18,15 +18,27 @@ function Transform() {
   const [selectedAppealId, setSelectedAppealId] = useState(null);
   const [enteredBall, setEnteredBall] = useState("");
   const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [documentStatus, setDocumentStatus] = useState(null);
   const [description, setDescription] = useState("");
-  const [extraData, setExtraData] = useState([])
+  const [extraData, setExtraData] = useState([]);
   const documentLists = [
     { value: 0, label: "Hujjat topshirilmagan" },
     { value: 1, label: "Hujjat to'liq emas" },
     { value: 2, label: "Hujjat to'liq" },
-  ]
-  const [admin, setAdmin] = useState()
+  ];
+  const [admin, setAdmin] = useState();
   const fetchAdmin = async () => {
     try {
       const response = await ApiCall(
@@ -34,14 +46,13 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setAdmin(response.data.id || []);
     } catch (error) {
       console.error("Error fetching appeal types:", error);
     }
   };
-
 
   const fetchExtraData = async () => {
     try {
@@ -50,10 +61,10 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       // console.log(response.data);
-      setExtraData(response.data)
+      setExtraData(response.data);
     } catch (error) {
       console.error("Qo'shimcha ma'lumotlar yuborishda xatolik:", error);
     }
@@ -114,7 +125,7 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setAppeals(response.data.content);
       setPagination((prev) => ({
@@ -137,7 +148,7 @@ function Transform() {
         `${baseUrl}/api/v1/admin/appeals/excel/transform?${queryParams}`,
         {
           method: "GET",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -148,7 +159,7 @@ function Transform() {
       if (
         !contentType ||
         !contentType.includes(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
       ) {
         throw new Error("The response is not a valid Excel file.");
@@ -193,13 +204,14 @@ function Transform() {
       <button
         key={1}
         onClick={() => handlePageChange(0)}
-        className={`px-4 py-2 rounded-md ${pagination.pageNumber === 0
-          ? "bg-blue-500 text-white"
-          : "bg-gray-200 hover:bg-gray-300"
-          }`}
+        className={`px-4 py-2 rounded-md ${
+          pagination.pageNumber === 0
+            ? "bg-blue-500 text-white"
+            : "bg-gray-200 hover:bg-gray-300"
+        }`}
       >
         1
-      </button>
+      </button>,
     );
 
     // Show ellipsis if there are pages before the current page
@@ -217,13 +229,14 @@ function Transform() {
         <button
           key={i + 1}
           onClick={() => handlePageChange(i)}
-          className={`px-4 py-2 rounded-md ${pagination.pageNumber === i
-            ? "bg-blue-500 text-white"
-            : "bg-gray-200 hover:bg-gray-300"
-            }`}
+          className={`px-4 py-2 rounded-md ${
+            pagination.pageNumber === i
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
         >
           {i + 1}
-        </button>
+        </button>,
       );
     }
 
@@ -238,13 +251,14 @@ function Transform() {
         <button
           key={totalPages}
           onClick={() => handlePageChange(totalPages - 1)}
-          className={`px-4 py-2 rounded-md ${pagination.pageNumber === totalPages - 1
-            ? "bg-blue-500 text-white"
-            : "bg-gray-200 hover:bg-gray-300"
-            }`}
+          className={`px-4 py-2 rounded-md ${
+            pagination.pageNumber === totalPages - 1
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
         >
           {totalPages}
-        </button>
+        </button>,
       );
     }
 
@@ -253,7 +267,13 @@ function Transform() {
 
   const fetchAgents = async () => {
     try {
-      const response = await ApiCall("/api/v1/operator", "GET", null, null, true);
+      const response = await ApiCall(
+        "/api/v1/operator",
+        "GET",
+        null,
+        null,
+        true,
+      );
       setAgents(response.data);
     } catch (error) {
       console.error("Error fetching agents:", error);
@@ -267,7 +287,7 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setAppealType(response.data || []);
     } catch (error) {
@@ -282,7 +302,7 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setEducationType(response.data);
     } catch (error) {
@@ -297,7 +317,7 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setEducationForm(response.data);
     } catch (error) {
@@ -312,7 +332,7 @@ function Transform() {
         "GET",
         null,
         null,
-        true
+        true,
       );
       setEducationField(response.data);
     } catch (error) {
@@ -373,12 +393,15 @@ function Transform() {
       educationFieldId,
     });
     const matchedStatus = documentLists.find(
-      (opt) => opt.value === appeal.documentStatus
+      (opt) => opt.value === appeal.documentStatus,
     );
     setDocumentStatus(matchedStatus || null);
-    const matchedExtra = extraData.find(extra => extra.abuturient.firstName === appeal.firstName && extra.abuturient.lastName === appeal.lastName);
+    const matchedExtra = extraData.find(
+      (extra) =>
+        extra.abuturient.firstName === appeal.firstName &&
+        extra.abuturient.lastName === appeal.lastName,
+    );
     setDescription(matchedExtra?.description || "");
-
 
     // Open the modal
     setEditModalOpen(true);
@@ -387,8 +410,11 @@ function Transform() {
   const handleSubmitExtraData = async () => {
     const isStatusFilled = !!documentStatus;
     const isDescriptionFilled = !!description.trim();
-    if ((isStatusFilled && !isDescriptionFilled) || (!isStatusFilled && isDescriptionFilled)) {
-      setEditModalOpen(true)
+    if (
+      (isStatusFilled && !isDescriptionFilled) ||
+      (!isStatusFilled && isDescriptionFilled)
+    ) {
+      setEditModalOpen(true);
       return;
     }
     if (!isStatusFilled && !isDescriptionFilled) {
@@ -408,10 +434,10 @@ function Transform() {
           description,
         },
         null,
-        true
+        true,
       );
-      setDocumentStatus(null)
-      setDescription("")
+      setDocumentStatus(null);
+      setDescription("");
       console.log("Qo'shimcha ma'lumotlar yuborildi.");
     } catch (error) {
       console.error("Qo'shimcha ma'lumotlar yuborishda xatolik:", error);
@@ -420,10 +446,10 @@ function Transform() {
   const handleDownloadPDF = async (phone) => {
     try {
       const response = await fetch(
-        `${baseUrl}/api/v1/abuturient/contract/${phone}`,
+        `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
         {
           method: "GET",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -456,8 +482,6 @@ function Transform() {
       console.error("Error downloading PDF:", error);
     }
   };
-
-  
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
@@ -512,8 +536,6 @@ function Transform() {
   };
 
   const handleEditSubmit = async () => {
-    const token = localStorage.getItem("access_token");
-
     if (!validateInputs()) return;
 
     try {
@@ -522,7 +544,7 @@ function Transform() {
         "PUT",
         editData,
         null,
-        true
+        true,
       );
       await handleSubmitExtraData(); // alohida hujjat ma'lumotlari
       setEditModalOpen(false);
@@ -541,13 +563,12 @@ function Transform() {
     }
 
     try {
-      const token = localStorage.getItem("access_token");
       await ApiCall(
         `/api/v1/admin/appeals/ball/${selectedAppealId}/${ball}/${token}`,
         "PUT",
         null,
         null,
-        true
+        true,
       );
       setBallModalOpen(false);
       setEnteredBall("");
@@ -865,10 +886,13 @@ function Transform() {
                 </td>
                 <td className="border border-gray-200  text-[12px]">{`${appeal.lastName} ${appeal.firstName} ${appeal.fatherName}`}</td>
                 <td
-                  className={`border border-gray-200  text-[14px] ${appeal.documentStatus === 1 && "bg-yellow-500"
-                    } ${appeal.documentStatus === 2 && "bg-green-500"
-                    } ${appeal.documentStatus !== 1 && appeal.documentStatus !== 2 && "bg-red-500"
-                    }`}
+                  className={`border border-gray-200  text-[14px] ${
+                    appeal.documentStatus === 1 && "bg-yellow-500"
+                  } ${appeal.documentStatus === 2 && "bg-green-500"} ${
+                    appeal.documentStatus !== 1 &&
+                    appeal.documentStatus !== 2 &&
+                    "bg-red-500"
+                  }`}
                 >
                   {`${appeal.passportPin || ""} ${appeal.passportNumber || ""}`}
                 </td>
@@ -1214,7 +1238,9 @@ function Transform() {
                         name="documentStatus"
                         options={documentLists}
                         value={documentStatus}
-                        onChange={(selectedOption) => setDocumentStatus(selectedOption)} // obyekt saqlanadi!
+                        onChange={(selectedOption) =>
+                          setDocumentStatus(selectedOption)
+                        } // obyekt saqlanadi!
                         placeholder="Hujjat holatini tanlang"
                         isSearchable
                         required
@@ -1248,10 +1274,11 @@ function Transform() {
                     type="button"
                     onClick={handleEditSubmit}
                     disabled={!validateInputs()}
-                    className={`w-full p-3 rounded-md transition duration-200 ${validateInputs()
-                      ? "bg-green-600 text-white hover:bg-green-700"
-                      : "bg-gray-400 text-white cursor-not-allowed"
-                      }`}
+                    className={`w-full p-3 rounded-md transition duration-200 ${
+                      validateInputs()
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-400 text-white cursor-not-allowed"
+                    }`}
                   >
                     Saqlash
                   </button>

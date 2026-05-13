@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -18,6 +18,18 @@ function SecondStudy() {
     const [selectedAppealId, setSelectedAppealId] = useState(null);
     const [enteredBall, setEnteredBall] = useState("");
     const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
     const [documentStatus, setDocumentStatus] = useState(null);
     const levels = [2]
     const [description, setDescription] = useState("");
@@ -364,22 +376,22 @@ function SecondStudy() {
 
         // Set edit data
         setEditData({
-            id: appeal.id,
-            passportPin: appeal.passportPin || "",
-            passportNumber: appeal.passportNumber || "",
-            firstName: appeal.firstName || "",
-            lastName: appeal.lastName || "",
-            fatherName: appeal.fatherName || "",
-            appealTypeId: appeal.appealType?.id || "",
+            id: appeal?.id,
+            passportPin: appeal?.passportPin || "",
+            passportNumber: appeal?.passportNumber || "",
+            firstName: appeal?.firstName || "",
+            lastName: appeal?.lastName || "",
+            fatherName: appeal?.fatherName || "",
+            appealTypeId: appeal?.appealType?.id || "",
             educationTypeId,
             educationFormId,
             educationFieldId,
         });
         const matchedStatus = documentLists.find(
-            (opt) => opt.value === appeal.documentStatus
+            (opt) => opt.value === appeal?.documentStatus
         );
         setDocumentStatus(matchedStatus || null);
-        const matchedExtra = extraData.find(extra => extra.abuturient.firstName === appeal.firstName && extra.abuturient.lastName === appeal.lastName);
+        const matchedExtra = extraData.find(extra => extra.abuturient?.firstName === appeal?.firstName && extra?.abuturient?.lastName === appeal?.lastName);
         setDescription(matchedExtra?.description || "");
 
 
@@ -423,7 +435,7 @@ function SecondStudy() {
     const handleDownloadPDF = async (phone) => {
         try {
             const response = await fetch(
-                `${baseUrl}/api/v1/abuturient/contract/${phone}`,
+                `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
                 {
                     method: "GET",
                 }
@@ -462,7 +474,7 @@ function SecondStudy() {
     const handleDownloadPDF02 = async (phone) => {
         try {
             const response = await fetch(
-                `${baseUrl}/api/v1/abuturient/contract02/${phone}`,
+                `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
                 {
                     method: "GET",
                 }

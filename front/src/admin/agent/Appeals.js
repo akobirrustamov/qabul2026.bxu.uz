@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import 'react-responsive-modal/styles.css';
@@ -34,6 +34,8 @@ function Appeals() {
     const [educationType, setEducationType] = useState([]);
     const [educationForm, setEducationForm] = useState([]);
     const [educationField, setEducationField] = useState([]);
+    const [user, setUser] = useState(null);
+    const userRef = useRef(null);
 
     const [pagination, setPagination] = useState({
         pageNumber: 0,
@@ -77,6 +79,19 @@ function Appeals() {
         }
     };
 
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        ApiCall("/api/v1/auth/decode", "GET")
+            .then((res) => {
+                setUser(res.data);
+            })
+            .catch(() => setUser(null));
+    }, []);
+
+    useEffect(() => {
+        userRef.current = user;
+    }, [user]);
+
     const handleEditClick = (appeal) => {
         const educationTypeId = appeal.educationField?.educationForm?.educationType?.id || "";
         const educationFormId = appeal.educationField?.educationForm?.id || "";
@@ -105,11 +120,18 @@ function Appeals() {
     };
 
     const handleDownloadPDF = async (appeal) => {
+        if (!userRef.current?.id) {
+            alert("User ID topilmadi");
+            return;
+        }
+
         if (appeal.passportPin) {
             let phone = appeal.phone;
             try {
-                const response = await fetch(`${baseUrl}/api/v1/abuturient/contract/${phone}`, {
+                const token = localStorage.getItem("access_token");
+                const response = await fetch(`${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`, {
                     method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
                 });
 
                 if (!response.ok) {

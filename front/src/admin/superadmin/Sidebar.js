@@ -225,6 +225,11 @@ const menuItems = [
     icon: UserIcon,
   },
   {
+    path: "/main/users",
+    label: "Users",
+    icon: UserIcon,
+  },
+  {
     path: "/main/operators",
     label: "Operatorlar",
     icon: UsersIcon,

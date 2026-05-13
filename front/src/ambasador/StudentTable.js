@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Sidebar from './Sidebar';
 import ApiCall, { baseUrl } from "../config";
 import {
@@ -24,6 +24,7 @@ function StudentTable() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [user, setUser] = useState(null);
+    const userRef = useRef(null);
     const [showFilters, setShowFilters] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
 
@@ -35,30 +36,23 @@ function StudentTable() {
     };
 
     useEffect(() => {
-        const getUser = async () => {
-            try {
-                const token = localStorage.getItem("access_token");
-                if (!token) {
-                    setError("Token topilmadi. Iltimos, tizimga qayta kiring.");
-                    setLoading(false);
-                    return;
-                }
-                const res = await ApiCall(`/api/v1/agent/me/${token}`, "GET", null, null, true);
-                if (res.data) {
-                    setUser(res.data.id);
-                } else {
-                    setError("Foydalanuvchi ma'lumotlari topilmadi.");
-                }
-            } catch (err) {
-                console.error("Error fetching user:", err);
-                setError("Foydalanuvchi ma'lumotlarini olishda xatolik yuz berdi.");
-            }
-        };
-        getUser();
+        const token = localStorage.getItem("access_token");
+        ApiCall("/api/v1/auth/decode", "GET")
+            .then((res) => {
+                setUser(res.data);
+            })
+            .catch(() => {
+                setUser(null);
+                setError("Foydalanuvchi ma'lumotlari topilmadi.");
+            });
     }, []);
 
     useEffect(() => {
-        if (user) fetchStudents(selectedStatus, user);
+        userRef.current = user;
+    }, [user]);
+
+    useEffect(() => {
+        if (user?.id) fetchStudents(selectedStatus, user.id);
     }, [selectedStatus, user]);
 
     const fetchStudents = async (status, userId) => {
@@ -147,10 +141,16 @@ function StudentTable() {
     };
 
     const handleDownload = async (appeal) => {
+        if (!userRef.current?.id) {
+            alert("User ID topilmadi");
+            return;
+        }
+
         if (appeal.passportPin) {
             let phone = appeal.phone;
             try {
-                const response = await fetch(`${baseUrl}/api/v1/abuturient/contract/${phone}`, { method: "GET" });
+                const token = localStorage.getItem("access_token");
+                const response = await fetch(`${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`, { method: "GET", headers: { Authorization: `Bearer ${token}` } });
 
                 if (!response.ok) throw new Error("Failed to download file");
 

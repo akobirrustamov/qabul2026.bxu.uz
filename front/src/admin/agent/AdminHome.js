@@ -47,6 +47,8 @@ const AgentHome = () => {
 
   const [agentPath, setAgentPath]   = useState(null);
   const [payment, setPayment] = useState([]);
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
 
   const [password, setPassword]               = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,6 +56,19 @@ const AgentHome = () => {
   const [showPassword, setShowPassword]       = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading]             = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => {
+        setUser(res.data);
+      })
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => { fetchAgent(); }, []);
 
@@ -127,10 +142,19 @@ const AgentHome = () => {
     }
   };
   const handleDownloadPDF = async (phone) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("access_token");
       const response = await fetch(
-          `${baseUrl}/api/v1/abuturient/contract/${phone}`,
-          { method: "GET" },
+          `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          },
       );
       if (!response.ok) throw new Error("Failed to download file");
       const blob = await response.blob();

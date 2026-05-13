@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -7,6 +7,18 @@ import Select from "react-select";
 
 function Appeals() {
   const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [appeals, setAppeals] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [appealType, setAppealType] = useState([]);
@@ -69,6 +81,18 @@ function Appeals() {
     if (window.confirm("Rostan ham bu arizani o'chirmoqchimisiz?")) {
       try {
         const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
         await ApiCall(
           `/api/v1/abuturient/${abuturientId}`,
           "DELETE",
@@ -497,7 +521,7 @@ function Appeals() {
       let phone = appeal.phone;
       try {
         const response = await fetch(
-          `${baseUrl}/api/v1/abuturient/contract02/${phone}`,
+          `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
           {
             method: "GET",
           }
@@ -597,6 +621,18 @@ function Appeals() {
 
   const handleEditSubmit = async () => {
     const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
     if (!validateInputs()) return;
     try {
       await ApiCall(
@@ -663,6 +699,18 @@ function Appeals() {
 
     try {
       const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
       await ApiCall(
         `/api/v1/admin/appeals/ball/${selectedAppealId}/${ball}/${token}`,
         "PUT",

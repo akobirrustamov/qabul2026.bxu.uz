@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -13,11 +13,25 @@ function Appeals() {
   const [educationType, setEducationType] = useState([]);
   const [educationForm, setEducationForm] = useState([]);
   const [educationField, setEducationField] = useState([]);
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
   const [agents, setAgents] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [ballModalOpen, setBallModalOpen] = useState(false);
   const [selectedAppealId, setSelectedAppealId] = useState(null);
   const [enteredBall, setEnteredBall] = useState("");
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => {
+        setUser(res.data);
+      })
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const [filters, setFilters] = useState({
     firstName: "",
@@ -355,13 +369,20 @@ function Appeals() {
     setEditModalOpen(true);
   };
   const handleDownloadPDF = async (appeal) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
+
     if (appeal.passportPin) {
       let phone = appeal.phone
       try {
+        const token = localStorage.getItem("access_token");
         const response = await fetch(
-          `${baseUrl}/api/v1/abuturient/contract02/${phone}`,
+          `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
           {
             method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 

@@ -21,4 +21,6 @@ public interface UserRepo extends JpaRepository<User, UUID> {
     Optional<User> findByCallCenterNumber(Integer callCenterNumber);
 
     List<User> findAllByCallCenterNumberIsNotNull();
+
+    UUID id(UUID id);
 }

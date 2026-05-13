@@ -117,6 +117,8 @@ export default function LeadModal({
   const [applicant, setApplicant] = useState(null);
   const [loadingApplicant, setLoadingApplicant] = useState(false);
   const commentsEndRef = useRef(null);
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
 
   // ─── Reminder state ───────────────────────────────────────────────────────
   const [showReminderPanel, setShowReminderPanel] = useState(false);
@@ -129,6 +131,16 @@ export default function LeadModal({
   useEffect(() => {
     commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [comments]);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Close reminder panel on outside click
   useEffect(() => {
@@ -891,9 +903,15 @@ export default function LeadModal({
   };
 
   const handleDownloadPDF = async (phone, isContract) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
+
     try {
-      const url = `${baseUrl}/api/v1/abuturient/contract/${phone}`;
-      const response = await fetch(url, { method: "GET" });
+      const token = localStorage.getItem("access_token");
+      const url = `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`;
+      const response = await fetch(url, { method: "GET", headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw new Error("Failed to download file");
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);

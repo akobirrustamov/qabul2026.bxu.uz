@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import "react-responsive-modal/styles.css";
 import { Modal } from "react-responsive-modal";
@@ -84,8 +84,21 @@ function Appeals() {
   const [selectedAppealId, setSelectedAppealId] = useState(null);
   const [enteredBall, setEnteredBall] = useState("");
   const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
   const [documentStatus, setDocumentStatus] = useState(null);
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    axiosInstance
+      .get("/api/v1/auth/decode")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [extraData, setExtraData] = useState([]);
   const [oldStudyValue, setOldStudyValue] = useState(null);
   const [oldStudyTime, setOldStudyTime] = useState(null);
@@ -352,8 +365,28 @@ function Appeals() {
   };
 
   const handleDownloadPDF = async (phone) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
     try {
-      window.open(`${baseUrl}/api/v1/abuturient/contract/${phone}`, "_blank");
+      const response = await fetch(
+        `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to download file");
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Contract_${phone}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error("Error downloading PDF:", error);
       alert("PDF yuklashda xatolik yuz berdi");
@@ -361,8 +394,28 @@ function Appeals() {
   };
 
   const handleDownloadPDF02 = async (phone) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
     try {
-      window.open(`${baseUrl}/api/v1/abuturient/contract02/${phone}`, "_blank");
+      const response = await fetch(
+        `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to download file");
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Contract_${phone}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       console.error("Error downloading PDF02:", error);
       alert("PDF yuklashda xatolik yuz berdi");

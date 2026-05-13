@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -35,6 +35,8 @@ function Transform() {
   const [educationType, setEducationType] = useState([]);
   const [educationForm, setEducationForm] = useState([]);
   const [educationField, setEducationField] = useState([]);
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
   const [agents, setAgents] = useState([]);
   const [showFilter, setShowFilter] = useState(false);
   const [ballModalOpen, setBallModalOpen] = useState(false);
@@ -68,6 +70,19 @@ function Transform() {
     educationFormId: "",
     educationFieldId: "",
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => {
+        setUser(res.data);
+      })
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     fetchAppeals();
@@ -356,11 +371,18 @@ function Transform() {
     setEditModalOpen(true);
   };
   const handleDownloadPDF = async (phone) => {
+    if (!userRef.current?.id) {
+      alert("User ID topilmadi");
+      return;
+    }
+
     try {
+      const token = localStorage.getItem("access_token");
       const response = await fetch(
-        `${baseUrl}/api/v1/abuturient/contract/${phone}`,
+        `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
         {
           method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 

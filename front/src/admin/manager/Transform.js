@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -18,23 +18,35 @@ function Transform() {
   const [selectedAppealId, setSelectedAppealId] = useState(null);
   const [enteredBall, setEnteredBall] = useState("");
   const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [documentStatus, setDocumentStatus] = useState(null);
   const [description, setDescription] = useState("");
-  const [extraData, setExtraData] = useState([])
+  const [extraData, setExtraData] = useState([]);
   const documentLists = [
     { value: 0, label: "Hujjat topshirilmagan" },
     { value: 1, label: "Hujjat to'liq emas" },
     { value: 2, label: "Hujjat to'liq" },
-  ]
-  const [admin, setAdmin] = useState()
+  ];
+  const [admin, setAdmin] = useState();
   const fetchAdmin = async () => {
     try {
       const response = await ApiCall(
-          `/api/v1/auth/me/` + token,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/auth/me/` + token,
+        "GET",
+        null,
+        null,
+        true,
       );
       setAdmin(response.data.id || []);
     } catch (error) {
@@ -42,17 +54,16 @@ function Transform() {
     }
   };
 
-
   const fetchExtraData = async () => {
     try {
       const response = await ApiCall(
-          `/api/v1/abuturient-document`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/abuturient-document`,
+        "GET",
+        null,
+        null,
+        true,
       );
-      setExtraData(response.data)
+      setExtraData(response.data);
     } catch (error) {
       console.error("Qo'shimcha ma'lumotlar yuborishda xatolik:", error);
     }
@@ -109,11 +120,11 @@ function Transform() {
         size: pagination.size,
       }).toString();
       const response = await ApiCall(
-          `/api/v1/admin/appeals/transform?${queryParams}`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/admin/appeals/transform?${queryParams}`,
+        "GET",
+        null,
+        null,
+        true,
       );
       setAppeals(response.data.content);
       setPagination((prev) => ({
@@ -132,10 +143,10 @@ function Transform() {
       }).toString();
 
       const response = await fetch(
-          `${baseUrl}/api/v1/admin/appeals/excel/transform?${queryParams}`,
-          {
-            method: "GET",
-          }
+        `${baseUrl}/api/v1/admin/appeals/excel/transform?${queryParams}`,
+        {
+          method: "GET",
+        },
       );
 
       if (!response.ok) {
@@ -144,10 +155,10 @@ function Transform() {
 
       const contentType = response.headers.get("Content-Type");
       if (
-          !contentType ||
-          !contentType.includes(
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          )
+        !contentType ||
+        !contentType.includes(
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
       ) {
         throw new Error("The response is not a valid Excel file.");
       }
@@ -185,16 +196,17 @@ function Transform() {
     const totalPages = pagination.totalPages;
 
     buttons.push(
-        <button
-            key={1}
-            onClick={() => handlePageChange(0)}
-            className={`px-4 py-2 rounded-md ${pagination.pageNumber === 0
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-        >
-          1
-        </button>
+      <button
+        key={1}
+        onClick={() => handlePageChange(0)}
+        className={`px-4 py-2 rounded-md ${
+          pagination.pageNumber === 0
+            ? "bg-blue-500 text-white"
+            : "bg-gray-200 hover:bg-gray-300"
+        }`}
+      >
+        1
+      </button>,
     );
 
     if (pagination.pageNumber > 2) {
@@ -202,21 +214,22 @@ function Transform() {
     }
 
     for (
-        let i = Math.max(1, pagination.pageNumber - 1);
-        i <= Math.min(totalPages - 2, pagination.pageNumber + 1);
-        i++
+      let i = Math.max(1, pagination.pageNumber - 1);
+      i <= Math.min(totalPages - 2, pagination.pageNumber + 1);
+      i++
     ) {
       buttons.push(
-          <button
-              key={i + 1}
-              onClick={() => handlePageChange(i)}
-              className={`px-4 py-2 rounded-md ${pagination.pageNumber === i
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-          >
-            {i + 1}
-          </button>
+        <button
+          key={i + 1}
+          onClick={() => handlePageChange(i)}
+          className={`px-4 py-2 rounded-md ${
+            pagination.pageNumber === i
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          {i + 1}
+        </button>,
       );
     }
 
@@ -226,16 +239,17 @@ function Transform() {
 
     if (totalPages > 1) {
       buttons.push(
-          <button
-              key={totalPages}
-              onClick={() => handlePageChange(totalPages - 1)}
-              className={`px-4 py-2 rounded-md ${pagination.pageNumber === totalPages - 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-          >
-            {totalPages}
-          </button>
+        <button
+          key={totalPages}
+          onClick={() => handlePageChange(totalPages - 1)}
+          className={`px-4 py-2 rounded-md ${
+            pagination.pageNumber === totalPages - 1
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          {totalPages}
+        </button>,
       );
     }
 
@@ -254,11 +268,11 @@ function Transform() {
   const fetchAppealType = async () => {
     try {
       const response = await ApiCall(
-          `/api/v1/appeal-type`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/appeal-type`,
+        "GET",
+        null,
+        null,
+        true,
       );
       setAppealType(response.data || []);
     } catch (error) {
@@ -269,11 +283,11 @@ function Transform() {
   const fetchEducationType = async () => {
     try {
       const response = await ApiCall(
-          `/api/v1/education-type`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/education-type`,
+        "GET",
+        null,
+        null,
+        true,
       );
       setEducationType(response.data);
     } catch (error) {
@@ -284,11 +298,11 @@ function Transform() {
   const fetchEducationForm = async (id) => {
     try {
       const response = await ApiCall(
-          `/api/v1/education-form/${id}`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/education-form/${id}`,
+        "GET",
+        null,
+        null,
+        true,
       );
       setEducationForm(response.data);
     } catch (error) {
@@ -299,11 +313,11 @@ function Transform() {
   const fetchEducationField = async (id) => {
     try {
       const response = await ApiCall(
-          `/api/v1/education-field/${id}`,
-          "GET",
-          null,
-          null,
-          true
+        `/api/v1/education-field/${id}`,
+        "GET",
+        null,
+        null,
+        true,
       );
       setEducationField(response.data);
     } catch (error) {
@@ -343,7 +357,7 @@ function Transform() {
 
   const handleEditClick = (appeal) => {
     const educationTypeId =
-        appeal.educationField?.educationForm?.educationType?.id || "";
+      appeal.educationField?.educationForm?.educationType?.id || "";
     const educationFormId = appeal.educationField?.educationForm?.id || "";
     const educationFieldId = appeal.educationField?.id || "";
 
@@ -366,10 +380,14 @@ function Transform() {
     });
 
     const matchedStatus = documentLists.find(
-        (opt) => opt.value === appeal.documentStatus
+      (opt) => opt.value === appeal.documentStatus,
     );
     setDocumentStatus(matchedStatus || null);
-    const matchedExtra = extraData.find(extra => extra.abuturient?.firstName === appeal?.firstName && extra.abuturient?.lastName === appeal?.lastName);
+    const matchedExtra = extraData.find(
+      (extra) =>
+        extra.abuturient?.firstName === appeal?.firstName &&
+        extra.abuturient?.lastName === appeal?.lastName,
+    );
     setDescription(matchedExtra?.description || "");
 
     setEditModalOpen(true);
@@ -378,8 +396,11 @@ function Transform() {
   const handleSubmitExtraData = async () => {
     const isStatusFilled = !!documentStatus;
     const isDescriptionFilled = !!description.trim();
-    if ((isStatusFilled && !isDescriptionFilled) || (!isStatusFilled && isDescriptionFilled)) {
-      setEditModalOpen(true)
+    if (
+      (isStatusFilled && !isDescriptionFilled) ||
+      (!isStatusFilled && isDescriptionFilled)
+    ) {
+      setEditModalOpen(true);
       return;
     }
     if (!isStatusFilled && !isDescriptionFilled) {
@@ -389,20 +410,20 @@ function Transform() {
 
     try {
       await ApiCall(
-          `/api/v1/abuturient-document`,
-          "POST",
-          {
-            userId: admin,
-            abuturientId: editData.id,
-            documentStatus: documentStatus.value,
-            title: "Hujjat holati",
-            description,
-          },
-          null,
-          true
+        `/api/v1/abuturient-document`,
+        "POST",
+        {
+          userId: admin,
+          abuturientId: editData.id,
+          documentStatus: documentStatus.value,
+          title: "Hujjat holati",
+          description,
+        },
+        null,
+        true,
       );
-      setDocumentStatus(null)
-      setDescription("")
+      setDocumentStatus(null);
+      setDescription("");
       console.log("Qo'shimcha ma'lumotlar yuborildi.");
     } catch (error) {
       console.error("Qo'shimcha ma'lumotlar yuborishda xatolik:", error);
@@ -412,8 +433,8 @@ function Transform() {
   const handleDownloadPDF = async (phone) => {
     try {
       const response = await fetch(
-          `${baseUrl}/api/v1/abuturient/contract/${phone}`,
-          { method: "GET" }
+        `${baseUrl}/api/v1/abuturient/contract/${phone}/${userRef.current.id}`,
+        { method: "GET" },
       );
       if (!response.ok) throw new Error("Failed to download file");
       const contentType = response.headers.get("Content-Type");
@@ -438,8 +459,8 @@ function Transform() {
   const handleDownloadPDF02 = async (phone) => {
     try {
       const response = await fetch(
-          `${baseUrl}/api/v1/abuturient/contract02/${phone}`,
-          { method: "GET" }
+        `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
+        { method: "GET" },
       );
       if (!response.ok) throw new Error("Failed to download file");
       const contentType = response.headers.get("Content-Type");
@@ -494,34 +515,33 @@ function Transform() {
 
   const validateInputs = () => {
     const baseValid =
-        editData.passportPin.length === 14 ||
-        /^[A-Z]{2}\d{7}$/.test(editData.passportNumber) ||
-        editData.firstName.trim() ||
-        editData.lastName.trim() ||
-        editData.fatherName.trim() ||
-        editData.appealTypeId ||
-        editData.educationTypeId ||
-        editData.educationFormId ||
-        editData.educationFieldId;
+      editData.passportPin.length === 14 ||
+      /^[A-Z]{2}\d{7}$/.test(editData.passportNumber) ||
+      editData.firstName.trim() ||
+      editData.lastName.trim() ||
+      editData.fatherName.trim() ||
+      editData.appealTypeId ||
+      editData.educationTypeId ||
+      editData.educationFormId ||
+      editData.educationFieldId;
 
     const extraDocumentValid =
-        !editModalOpen ||
-        documentStatus?.value === 0 ||
-        (documentStatus?.value !== 0 && description.trim());
+      !editModalOpen ||
+      documentStatus?.value === 0 ||
+      (documentStatus?.value !== 0 && description.trim());
 
     return baseValid && extraDocumentValid;
   };
 
   const handleEditSubmit = async () => {
-    const token = localStorage.getItem("access_token");
     if (!validateInputs()) return;
     try {
       await ApiCall(
-          `/api/v1/admin/appeals/${editData.id}/${token}`,
-          "PUT",
-          editData,
-          null,
-          true
+        `/api/v1/admin/appeals/${editData.id}/${token}`,
+        "PUT",
+        editData,
+        null,
+        true,
       );
       await handleSubmitExtraData();
       setEditModalOpen(false);
@@ -538,13 +558,13 @@ function Transform() {
       return;
     }
     try {
-      const token = localStorage.getItem("access_token");
+     
       await ApiCall(
-          `/api/v1/admin/appeals/ball/${selectedAppealId}/${ball}/${token}`,
-          "PUT",
-          null,
-          null,
-          true
+        `/api/v1/admin/appeals/ball/${selectedAppealId}/${ball}/${token}`,
+        "PUT",
+        null,
+        null,
+        true,
       );
       setBallModalOpen(false);
       setEnteredBall("");
@@ -556,531 +576,746 @@ function Transform() {
   };
 
   return (
-      <div>
-        <Sidebar />
-        <div className="p-10 sm:ml-64">
-          <h2 className="text-3xl">Kelib tushgan arizalar</h2>
+    <div>
+      <Sidebar />
+      <div className="p-10 sm:ml-64">
+        <h2 className="text-3xl">Kelib tushgan arizalar</h2>
 
-          {/* Filter Section */}
-          <div className=" bg-white p-4 rounded-lg shadow-md">
-            {showFilter && (
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-gray-600">FIO</label>
-                    <input
-                        type="text"
-                        name="firstName"
-                        value={filters.firstName}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Passport raqami</label>
-                    <input
-                        type="text"
-                        name="passportNumber"
-                        value={filters.passportNumber}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">JSHR</label>
-                    <input
-                        type="text"
-                        name="passportPin"
-                        value={filters.passportPin}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Telefon</label>
-                    <input
-                        type="text"
-                        name="phone"
-                        value={filters.phone}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Ariza turi</label>
-                    <select
-                        name="appealTypeId"
-                        value={filters.appealTypeId}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    >
-                      <option value="">Hammasi</option>
-                      {appealType.map((item) => (
-                          <option key={item.id} value={item.id}>{item.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Ta'lim turi</label>
-                    <select
-                        name="educationTypeId"
-                        value={filters.educationTypeId}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    >
-                      <option value="">Hammasi</option>
-                      {educationType.map((item) => (
-                          <option key={item.id} value={item.id}>{item.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Ta'lim shakli</label>
-                    <select
-                        name="educationFormId"
-                        value={filters.educationFormId}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    >
-                      <option value="">Hammasi</option>
-                      {educationForm.map((item) => (
-                          <option key={item.id} value={item.id}>{item.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Yo'nalish</label>
-                    <select
-                        name="educationFieldId"
-                        value={filters.educationFieldId}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    >
-                      <option value="">Hammasi</option>
-                      {educationField.map((item) => (
-                          <option key={item.id} value={item.id}>{item.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Agent</label>
-                    <select
-                        name="agentId"
-                        value={filters.agentId}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    >
-                      <option value="">Hammasi</option>
-                      {agents.map((item) => (
-                          <option key={item.agent.id} value={item.agent.id}>{item.agent.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-gray-600">Sana</label>
-                    <input
-                        type="date"
-                        name="createdAt"
-                        value={filters.createdAt}
-                        onChange={handleFilterChange}
-                        className="border border-gray-300 rounded-md p-1 w-full"
-                    />
-                  </div>
-                </div>
-            )}
-            <div className=" flex justify-content-between">
-              <div className={"flex gap-2"}>
-                <button
-                    onClick={handleApplyFilters}
-                    className="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600"
-                >
-                  Filtrlash
-                </button>
-                <button
-                    onClick={handleResetFilters}
-                    className="bg-gray-500 text-white px-2 py-1 rounded-md hover:bg-gray-600"
-                >
-                  Tozalash
-                </button>
-                <button
-                    onClick={fetchAppealsExcel}
-                    className="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 flex gap-2"
-                >
-                  <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4" />
-                  </svg>
-                  Excel
-                </button>
+        {/* Filter Section */}
+        <div className=" bg-white p-4 rounded-lg shadow-md">
+          {showFilter && (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-gray-600">FIO</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={filters.firstName}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                />
               </div>
               <div>
-                <button
-                    onClick={() => setShowFilter(!showFilter)}
-                    className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
+                <label className="block text-gray-600">Passport raqami</label>
+                <input
+                  type="text"
+                  name="passportNumber"
+                  value={filters.passportNumber}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600">JSHR</label>
+                <input
+                  type="text"
+                  name="passportPin"
+                  value={filters.passportPin}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600">Telefon</label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={filters.phone}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600">Ariza turi</label>
+                <select
+                  name="appealTypeId"
+                  value={filters.appealTypeId}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
                 >
-                  {showFilter ? (
-                      <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m5 15 7-7 7 7" />
-                      </svg>
-                  ) : (
-                      <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m19 9-7 7-7-7" />
-                      </svg>
-                  )}
-                </button>
+                  <option value="">Hammasi</option>
+                  {appealType.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-600">Ta'lim turi</label>
+                <select
+                  name="educationTypeId"
+                  value={filters.educationTypeId}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                >
+                  <option value="">Hammasi</option>
+                  {educationType.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-600">Ta'lim shakli</label>
+                <select
+                  name="educationFormId"
+                  value={filters.educationFormId}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                >
+                  <option value="">Hammasi</option>
+                  {educationForm.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-600">Yo'nalish</label>
+                <select
+                  name="educationFieldId"
+                  value={filters.educationFieldId}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                >
+                  <option value="">Hammasi</option>
+                  {educationField.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-600">Agent</label>
+                <select
+                  name="agentId"
+                  value={filters.agentId}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                >
+                  <option value="">Hammasi</option>
+                  {agents.map((item) => (
+                    <option key={item.agent.id} value={item.agent.id}>
+                      {item.agent.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-600">Sana</label>
+                <input
+                  type="date"
+                  name="createdAt"
+                  value={filters.createdAt}
+                  onChange={handleFilterChange}
+                  className="border border-gray-300 rounded-md p-1 w-full"
+                />
               </div>
             </div>
-          </div>
-
-          {/* Table Section */}
-          <table className="min-w-full mt-4 border-collapse border border-gray-300">
-            <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">N%</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">FIO</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Passport</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Telefon</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Ariza turi</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Ta'lim turi</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Ta'lim shakli</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Yonalishi</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Kurs</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Agent</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Sana</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Manzil</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Status</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]">Ball</th>
-              <th className="border border-gray-300 px-1 py-1 text-[14px]"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {appeals.map((appeal, index) => (
-                <tr
-                    key={index}
-                    className="group border-t border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:border-l-green-400 transition-all"
-                >
-                  <td className="border border-gray-200 text-[14px]">{index + 1}</td>
-                  <td className="border border-gray-200 text-[12px]">{`${appeal.lastName} ${appeal.firstName} ${appeal.fatherName}`}</td>
-                  <td className={`border border-gray-200 text-[14px] ${appeal.documentStatus === 1 && "bg-yellow-500"} ${appeal.documentStatus === 2 && "bg-green-500"} ${appeal.documentStatus !== 1 && appeal.documentStatus !== 2 && "bg-red-500"}`}>
-                    {`${appeal.passportPin || ""} ${appeal.passportNumber || ""}`}
-                  </td>
-                  <td className="border border-gray-200 text-[14px]">{appeal.phone.trim()}</td>
-                  <td className="border border-gray-200 text-[14px]">{appeal.appealType?.name}</td>
-                  <td className="border border-gray-200 text-[14px]">{appeal.educationField?.educationForm?.educationType?.name}</td>
-                  <td className="border border-gray-200 text-[14px]">{appeal.educationField?.educationForm?.name}</td>
-                  <td className="border border-gray-200 text-[14px]">{appeal.educationField?.name}</td>
-                  {appeal?.level ? (
-                      <td className="border border-gray-200 text-[14px]">{appeal.level}-kurs</td>
-                  ) : (
-                      <td className="border border-gray-200 text-[14px]"></td>
-                  )}
-                  <td className="border border-gray-200 text-[14px]">{appeal.agent?.name}</td>
-                  <td className="border border-gray-200 text-[14px]">{new Date(appeal.createdAt).toLocaleString()}</td>
-                  {appeal.isForeign ? (
-                      <td className="border border-gray-200 text-[12px]">{appeal?.country}<br />{appeal?.city}</td>
-                  ) : (
-                      <td className="border border-gray-200 text-[12px]">{appeal?.district?.region.name}<br />{appeal?.district?.name}</td>
-                  )}
-                  <td className="border border-gray-200 text-[10px]">
-                    {appeal.status === 1 && "Telefon raqam kiritgan"}
-                    {appeal.status === 2 && "Ma'lumot kiritgan"}
-                    {appeal.status === 3 && "Test yechgan"}
-                    {appeal.status === 4 && "Shartnoma olgan"}
-                  </td>
-                  <td className="border border-gray-200 text-[14px]">
-                    <button
-                        className="bg-blue-600 rounded p-1 text-white"
-                        onClick={() => { setSelectedAppealId(appeal.id); setBallModalOpen(true); }}
-                    >
-                      {appeal.ball ? appeal.ball : "0.0"}
-                    </button>
-                  </td>
-                  <td className="border border-gray-200 text-[14px] d-flex gap-1">
-                    <button
-                        className="text-white bg-blue-600 rounded p-1 hover:underline"
-                        onClick={() => handleEditClick(appeal)}
-                    >
-                      <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
-                      </svg>
-                    </button>
-                    {appeal.level ? (
-                        <button className="text-white bg-green-600 rounded p-1 hover:underline" onClick={() => handleDownloadPDF(appeal.phone)}>
-                          <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z" />
-                          </svg>
-                        </button>
-                    ) : ""}
-                    {appeal.level ? (
-                        <button className="text-white bg-yellow-400 rounded p-1 hover:underline" onClick={() => handleDownloadPDF02(appeal.phone)}>
-                          <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z" />
-                          </svg>
-                        </button>
-                    ) : ""}
-                  </td>
-                </tr>
-            ))}
-            </tbody>
-          </table>
-
-          <div className="mt-4 flex justify-center gap-2">
-            <button
-                onClick={() => handlePageChange(pagination.pageNumber - 1)}
-                disabled={pagination.pageNumber === 0}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
-            >
-              <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 6v12m8-12v12l-8-6 8-6Z" />
-              </svg>
-            </button>
-            {renderPaginationButtons()}
-            <button
-                onClick={() => handlePageChange(pagination.pageNumber + 1)}
-                disabled={pagination.pageNumber === pagination.totalPages - 1}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
-            >
-              <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 6v12M8 6v12l8-6-8-6Z" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Edit Modal */}
-          <Modal
-              open={editModalOpen}
-              onClose={() => setEditModalOpen(false)}
-              animationDuration={600}
-              center
-          >
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Tahrirlash
-            </h2>
-            <div
-                className="flex flex-col bg-white rounded-lg shadow-lg p-6"
-                style={{ width: "500px", height: "auto" }}
-            >
-              <form>
-                <div className="space-y-4">
-                  <div className="flex gap-8">
-                    <div className="w-1/2">
-                      <div>
-                        <label className="text-gray-600">Familiya</label>
-                        <input
-                            type="text"
-                            name="lastName"
-                            value={editData.lastName || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Ism</label>
-                        <input
-                            type="text"
-                            name="firstName"
-                            value={editData.firstName || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Sharifi</label>
-                        <input
-                            type="text"
-                            name="fatherName"
-                            value={editData.fatherName || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Ariza turi</label>
-                        <select
-                            name="appealTypeId"
-                            value={editData.appealTypeId || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        >
-                          <option value="">Ariza turini tanlang</option>
-                          {appealType?.map((item) => (
-                              <option key={item.id} value={item.id}>{item.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Ta'lim turi</label>
-                        <select
-                            name="educationTypeId"
-                            value={editData.educationTypeId || ""}
-                            onChange={(e) => { handleInputChange(e); fetchEducationForm(e.target.value); }}
-                            className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        >
-                          <option value="">Ta'lim turini tanlang</option>
-                          {educationType.map((item) => (
-                              <option key={item.id} value={item.id}>{item.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Ta'lim shakli</label>
-                        <select
-                            name="educationFormId"
-                            value={editData.educationFormId || ""}
-                            onChange={(e) => { handleInputChange(e); fetchEducationField(e.target.value); }}
-                            className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        >
-                          <option value="">Ta'lim shaklini tanlang</option>
-                          {educationForm.map((item) => (
-                              <option key={item.id} value={item.id}>{item.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Yo'nalish</label>
-                        <select
-                            name="educationFieldId"
-                            value={editData.educationFieldId || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        >
-                          <option value="">Yo'nalishni tanlang</option>
-                          {educationField?.length > 0 ? (
-                              educationField.map((item) => (
-                                  <option key={item.id} value={item.id}>{item.name}</option>
-                              ))
-                          ) : (
-                              <option value="">Ma'lumot mavjud emas</option>
-                          )}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="w-1/2">
-                      <div>
-                        <label className="text-gray-600">JSHR</label>
-                        <input
-                            type="text"
-                            name="passportPin"
-                            placeholder="Passport Pin (14 digits)"
-                            value={editData.passportPin || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-600">Passport raqami</label>
-                        <input
-                            type="text"
-                            name="passportNumber"
-                            placeholder="Passport Number (e.g., AB1234567)"
-                            value={editData.passportNumber || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            required
-                        />
-                      </div>
-
-                      {/* ✅ NEW: Kurs select */}
-                      <div>
-                        <label className="text-gray-600">Kurs</label>
-                        <select
-                            name="level"
-                            value={editData.level || ""}
-                            onChange={handleInputChange}
-                            className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                        >
-                          <option value="">Kursni tanlang</option>
-                          <option value="2">2-kurs</option>
-                          <option value="3">3-kurs</option>
-                          <option value="4">4-kurs</option>
-                          <option value="5">5-kurs</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 font-medium mb-1">
-                          Hujjat holati
-                        </label>
-                        <Select
-                            id="documentStatus"
-                            name="documentStatus"
-                            options={documentLists}
-                            value={documentStatus}
-                            onChange={(selectedOption) => setDocumentStatus(selectedOption)}
-                            placeholder="Hujjat holatini tanlang"
-                            isSearchable
-                            required
-                            styles={{
-                              control: (base) => ({
-                                ...base,
-                                minHeight: "48px",
-                                borderColor: "#d1d5db",
-                                "&:hover": { borderColor: "#3b82f6" },
-                              }),
-                              option: (base, { isFocused }) => ({
-                                ...base,
-                                backgroundColor: isFocused ? "#e0e7ff" : "white",
-                                color: "#1e3a8a",
-                              }),
-                            }}
-                        />
-                        <label className="text-gray-600">Batafsil</label>
-                        <textarea
-                            className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <button
-                        type="button"
-                        onClick={handleEditSubmit}
-                        disabled={!validateInputs()}
-                        className={`w-full p-3 rounded-md transition duration-200 ${validateInputs()
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-gray-400 text-white cursor-not-allowed"
-                        }`}
-                    >
-                      Saqlash
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </Modal>
-
-          <Modal open={ballModalOpen} onClose={() => setBallModalOpen(false)} center>
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Ballni kiriting
-            </h2>
-            <div className="flex flex-col bg-white rounded-lg shadow-lg p-6" style={{ width: "400px" }}>
-              <input
-                  type="number"
-                  value={enteredBall}
-                  onChange={(e) => setEnteredBall(e.target.value)}
-                  placeholder="0 dan 189 gacha"
-                  className="border border-gray-300 rounded-md p-2 mb-4"
-              />
+          )}
+          <div className=" flex justify-content-between">
+            <div className={"flex gap-2"}>
               <button
-                  onClick={handleSubmitBall}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                onClick={handleApplyFilters}
+                className="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600"
               >
-                Saqlash
+                Filtrlash
+              </button>
+              <button
+                onClick={handleResetFilters}
+                className="bg-gray-500 text-white px-2 py-1 rounded-md hover:bg-gray-600"
+              >
+                Tozalash
+              </button>
+              <button
+                onClick={fetchAppealsExcel}
+                className="bg-green-500 text-white px-2 py-1 rounded-md hover:bg-green-600 flex gap-2"
+              >
+                <svg
+                  className="w-6 h-6 text-gray-800 dark:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"
+                  />
+                </svg>
+                Excel
               </button>
             </div>
-          </Modal>
+            <div>
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600"
+              >
+                {showFilter ? (
+                  <svg
+                    className="w-6 h-6 text-gray-800 dark:text-white"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m5 15 7-7 7 7"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-6 h-6 text-gray-800 dark:text-white"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m19 9-7 7-7-7"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Table Section */}
+        <table className="min-w-full mt-4 border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                N%
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                FIO
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Passport
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Telefon
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Ariza turi
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Ta'lim turi
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Ta'lim shakli
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Yonalishi
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Kurs
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Agent
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Sana
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Manzil
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Status
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]">
+                Ball
+              </th>
+              <th className="border border-gray-300 px-1 py-1 text-[14px]"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {appeals.map((appeal, index) => (
+              <tr
+                key={index}
+                className="group border-t border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:border-l-green-400 transition-all"
+              >
+                <td className="border border-gray-200 text-[14px]">
+                  {index + 1}
+                </td>
+                <td className="border border-gray-200 text-[12px]">{`${appeal.lastName} ${appeal.firstName} ${appeal.fatherName}`}</td>
+                <td
+                  className={`border border-gray-200 text-[14px] ${appeal.documentStatus === 1 && "bg-yellow-500"} ${appeal.documentStatus === 2 && "bg-green-500"} ${appeal.documentStatus !== 1 && appeal.documentStatus !== 2 && "bg-red-500"}`}
+                >
+                  {`${appeal.passportPin || ""} ${appeal.passportNumber || ""}`}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.phone.trim()}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.appealType?.name}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.educationField?.educationForm?.educationType?.name}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.educationField?.educationForm?.name}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.educationField?.name}
+                </td>
+                {appeal?.level ? (
+                  <td className="border border-gray-200 text-[14px]">
+                    {appeal.level}-kurs
+                  </td>
+                ) : (
+                  <td className="border border-gray-200 text-[14px]"></td>
+                )}
+                <td className="border border-gray-200 text-[14px]">
+                  {appeal.agent?.name}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  {new Date(appeal.createdAt).toLocaleString()}
+                </td>
+                {appeal.isForeign ? (
+                  <td className="border border-gray-200 text-[12px]">
+                    {appeal?.country}
+                    <br />
+                    {appeal?.city}
+                  </td>
+                ) : (
+                  <td className="border border-gray-200 text-[12px]">
+                    {appeal?.district?.region.name}
+                    <br />
+                    {appeal?.district?.name}
+                  </td>
+                )}
+                <td className="border border-gray-200 text-[10px]">
+                  {appeal.status === 1 && "Telefon raqam kiritgan"}
+                  {appeal.status === 2 && "Ma'lumot kiritgan"}
+                  {appeal.status === 3 && "Test yechgan"}
+                  {appeal.status === 4 && "Shartnoma olgan"}
+                </td>
+                <td className="border border-gray-200 text-[14px]">
+                  <button
+                    className="bg-blue-600 rounded p-1 text-white"
+                    onClick={() => {
+                      setSelectedAppealId(appeal.id);
+                      setBallModalOpen(true);
+                    }}
+                  >
+                    {appeal.ball ? appeal.ball : "0.0"}
+                  </button>
+                </td>
+                <td className="border border-gray-200 text-[14px] d-flex gap-1">
+                  <button
+                    className="text-white bg-blue-600 rounded p-1 hover:underline"
+                    onClick={() => handleEditClick(appeal)}
+                  >
+                    <svg
+                      className="w-6 h-6 text-gray-800 dark:text-white"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28"
+                      />
+                    </svg>
+                  </button>
+                  {appeal.level ? (
+                    <button
+                      className="text-white bg-green-600 rounded p-1 hover:underline"
+                      onClick={() => handleDownloadPDF(appeal.phone)}
+                    >
+                      <svg
+                        className="w-6 h-6 text-gray-800 dark:text-white"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z"
+                        />
+                      </svg>
+                    </button>
+                  ) : (
+                    ""
+                  )}
+                  {appeal.level ? (
+                    <button
+                      className="text-white bg-yellow-400 rounded p-1 hover:underline"
+                      onClick={() => handleDownloadPDF02(appeal.phone)}
+                    >
+                      <svg
+                        className="w-6 h-6 text-gray-800 dark:text-white"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z"
+                        />
+                      </svg>
+                    </button>
+                  ) : (
+                    ""
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="mt-4 flex justify-center gap-2">
+          <button
+            onClick={() => handlePageChange(pagination.pageNumber - 1)}
+            disabled={pagination.pageNumber === 0}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+          >
+            <svg
+              className="w-6 h-6 text-gray-800 dark:text-white"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 6v12m8-12v12l-8-6 8-6Z"
+              />
+            </svg>
+          </button>
+          {renderPaginationButtons()}
+          <button
+            onClick={() => handlePageChange(pagination.pageNumber + 1)}
+            disabled={pagination.pageNumber === pagination.totalPages - 1}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-300"
+          >
+            <svg
+              className="w-6 h-6 text-gray-800 dark:text-white"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M16 6v12M8 6v12l8-6-8-6Z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Edit Modal */}
+        <Modal
+          open={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          animationDuration={600}
+          center
+        >
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Tahrirlash
+          </h2>
+          <div
+            className="flex flex-col bg-white rounded-lg shadow-lg p-6"
+            style={{ width: "500px", height: "auto" }}
+          >
+            <form>
+              <div className="space-y-4">
+                <div className="flex gap-8">
+                  <div className="w-1/2">
+                    <div>
+                      <label className="text-gray-600">Familiya</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={editData.lastName || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Ism</label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={editData.firstName || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Sharifi</label>
+                      <input
+                        type="text"
+                        name="fatherName"
+                        value={editData.fatherName || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Ariza turi</label>
+                      <select
+                        name="appealTypeId"
+                        value={editData.appealTypeId || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      >
+                        <option value="">Ariza turini tanlang</option>
+                        {appealType?.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Ta'lim turi</label>
+                      <select
+                        name="educationTypeId"
+                        value={editData.educationTypeId || ""}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          fetchEducationForm(e.target.value);
+                        }}
+                        className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      >
+                        <option value="">Ta'lim turini tanlang</option>
+                        {educationType.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Ta'lim shakli</label>
+                      <select
+                        name="educationFormId"
+                        value={editData.educationFormId || ""}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          fetchEducationField(e.target.value);
+                        }}
+                        className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      >
+                        <option value="">Ta'lim shaklini tanlang</option>
+                        {educationForm.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Yo'nalish</label>
+                      <select
+                        name="educationFieldId"
+                        value={editData.educationFieldId || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      >
+                        <option value="">Yo'nalishni tanlang</option>
+                        {educationField?.length > 0 ? (
+                          educationField.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Ma'lumot mavjud emas</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="w-1/2">
+                    <div>
+                      <label className="text-gray-600">JSHR</label>
+                      <input
+                        type="text"
+                        name="passportPin"
+                        placeholder="Passport Pin (14 digits)"
+                        value={editData.passportPin || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-gray-600">Passport raqami</label>
+                      <input
+                        type="text"
+                        name="passportNumber"
+                        placeholder="Passport Number (e.g., AB1234567)"
+                        value={editData.passportNumber || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        required
+                      />
+                    </div>
+
+                    {/* ✅ NEW: Kurs select */}
+                    <div>
+                      <label className="text-gray-600">Kurs</label>
+                      <select
+                        name="level"
+                        value={editData.level || ""}
+                        onChange={handleInputChange}
+                        className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Kursni tanlang</option>
+                        <option value="2">2-kurs</option>
+                        <option value="3">3-kurs</option>
+                        <option value="4">4-kurs</option>
+                        <option value="5">5-kurs</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-1">
+                        Hujjat holati
+                      </label>
+                      <Select
+                        id="documentStatus"
+                        name="documentStatus"
+                        options={documentLists}
+                        value={documentStatus}
+                        onChange={(selectedOption) =>
+                          setDocumentStatus(selectedOption)
+                        }
+                        placeholder="Hujjat holatini tanlang"
+                        isSearchable
+                        required
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            minHeight: "48px",
+                            borderColor: "#d1d5db",
+                            "&:hover": { borderColor: "#3b82f6" },
+                          }),
+                          option: (base, { isFocused }) => ({
+                            ...base,
+                            backgroundColor: isFocused ? "#e0e7ff" : "white",
+                            color: "#1e3a8a",
+                          }),
+                        }}
+                      />
+                      <label className="text-gray-600">Batafsil</label>
+                      <textarea
+                        className="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleEditSubmit}
+                    disabled={!validateInputs()}
+                    className={`w-full p-3 rounded-md transition duration-200 ${
+                      validateInputs()
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-400 text-white cursor-not-allowed"
+                    }`}
+                  >
+                    Saqlash
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal
+          open={ballModalOpen}
+          onClose={() => setBallModalOpen(false)}
+          center
+        >
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Ballni kiriting
+          </h2>
+          <div
+            className="flex flex-col bg-white rounded-lg shadow-lg p-6"
+            style={{ width: "400px" }}
+          >
+            <input
+              type="number"
+              value={enteredBall}
+              onChange={(e) => setEnteredBall(e.target.value)}
+              placeholder="0 dan 189 gacha"
+              className="border border-gray-300 rounded-md p-2 mb-4"
+            />
+            <button
+              onClick={handleSubmitBall}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              Saqlash
+            </button>
+          </div>
+        </Modal>
       </div>
+    </div>
   );
 }
 

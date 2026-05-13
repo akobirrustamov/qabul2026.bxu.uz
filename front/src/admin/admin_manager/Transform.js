@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ApiCall, { baseUrl } from "../../config";
 import "react-responsive-modal/styles.css";
@@ -18,6 +18,18 @@ function Transform() {
   const [selectedAppealId, setSelectedAppealId] = useState(null);
   const [enteredBall, setEnteredBall] = useState("");
   const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
   const [documentStatus, setDocumentStatus] = useState(null);
   const [description, setDescription] = useState("");
   const [extraData, setExtraData] = useState([])
@@ -422,7 +434,7 @@ function Transform() {
   const handleDownloadPDF = async (phone) => {
     try {
       const response = await fetch(
-        `${baseUrl}/api/v1/abuturient/contract02/${phone}`,
+        `${baseUrl}/api/v1/abuturient/contract02/${phone}/${userRef.current.id}`,
         {
           method: "GET",
         }
@@ -513,6 +525,18 @@ function Transform() {
 
   const handleEditSubmit = async () => {
     const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
     if (!validateInputs()) return;
 
@@ -542,6 +566,18 @@ function Transform() {
 
     try {
       const token = localStorage.getItem("access_token");
+  const [user, setUser] = useState(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    ApiCall("/api/v1/auth/decode", "GET")
+      .then((res) => setUser(res.data))
+      .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
       await ApiCall(
         `/api/v1/admin/appeals/ball/${selectedAppealId}/${ball}/${token}`,
         "PUT",

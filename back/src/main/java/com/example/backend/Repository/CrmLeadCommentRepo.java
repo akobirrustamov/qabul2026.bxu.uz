@@ -17,4 +17,10 @@ public interface CrmLeadCommentRepo extends JpaRepository<CrmLeadComment, UUID> 
     // Kamayish tartibida (eng yangisi birinchi)
     List<CrmLeadComment> findByCrmLeadIdOrderByCreatedAtDesc(UUID crmLeadId);
 
+    // Commenter va date range bo'yicha
+    List<CrmLeadComment> findByCommenterIdAndCreatedAtBetween(UUID commenterId, LocalDateTime start, LocalDateTime end);
+
+    // Barcha commentlar date range bo'yicha
+    List<CrmLeadComment> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
 }

@@ -27,6 +27,8 @@ public class User implements UserDetails {
     private String name;
     private String password;
     private Integer callCenterNumber;
+    @ManyToOne
+    private Attachment image;
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles;
 
