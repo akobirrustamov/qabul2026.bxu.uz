@@ -1,6 +1,9 @@
 package com.example.backend.Security;
 
+import com.example.backend.Entity.User;
+import com.example.backend.Entity.UsersTimetable;
 import com.example.backend.Repository.UserRepo;
+import com.example.backend.Repository.UsersTimetableRepo;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,7 +19,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -27,6 +35,7 @@ public class MyFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserRepo userRepo;
+    private final UsersTimetableRepo usersTimetableRepo;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/v1/auth/login",
@@ -113,12 +122,17 @@ public class MyFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        System.out.println(request.getRequestURI());
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws IOException, ServletException {
+
+        System.out.println("Filtering request: " + request.getMethod() + " " + request.getRequestURI());
+
         if (isPublicPath(request)) {
             filterChain.doFilter(request, response);
             return;
         }
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || authHeader.isBlank()) {
@@ -128,20 +142,23 @@ public class MyFilter extends OncePerRequestFilter {
 
         String token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
 
-
         try {
             String subject = jwtService.extractSubjectFromJwt(token);
-            UserDetails userDetails = userRepo.findById(UUID.fromString(subject)).orElseThrow();
+            User user = (User) userRepo.findById(UUID.fromString(subject)).orElseThrow();
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UsernamePasswordAuthenticationToken authenticationToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,
+                                user,
                                 null,
-                                userDetails.getAuthorities()
+                                user.getAuthorities()
                         );
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
             }
+
+            // ── Timetable: IP + token ni saqlash ──────────────────
+            recordUserActivity(user, token, request);
+            // ─────────────────────────────────────────────────────
 
             filterChain.doFilter(request, response);
 
@@ -152,5 +169,76 @@ public class MyFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             sendUnauthorized(response, "Invalid token");
         }
+    }
+
+    /**
+     * Har bir authenticated so'rovda user faoliyatini saqlaydi.
+     * Har kuni bitta yozuv: firstSeen (birinchi so'rov), lastSeen (har so'rovda yangilanadi),
+     * requestCount (oshib boradi), ip va token yangilanadi.
+     */
+    private void recordUserActivity(User user, String token, HttpServletRequest request) {
+        try {
+            String ip          = extractIp(request);
+            String tokenHash   = sha256(token);
+            String tokenPrefix = token.length() > 60 ? token.substring(0, 60) : token;
+            LocalDate today    = LocalDate.now();
+            LocalDateTime now  = LocalDateTime.now();
+
+            Optional<UsersTimetable> existing = usersTimetableRepo.findByTokenHash(tokenHash);
+
+            if (existing.isPresent()) {
+                // Xuddi shu token — requestCount oshiramiz
+                UsersTimetable timetable = existing.get();
+                timetable.setLastSeen(now);
+                timetable.setIp(ip);
+                timetable.setRequestCount(timetable.getRequestCount() + 1);
+                usersTimetableRepo.save(timetable);
+            } else {
+                // Yangi token — yangi yozuv
+                UsersTimetable timetable = UsersTimetable.builder()
+                        .user(user)
+                        .ip(ip)
+                        .tokenHash(tokenHash)
+                        .tokenPrefix(tokenPrefix)
+                        .date(today)
+                        .firstSeen(now)
+                        .lastSeen(now)
+                        .requestCount(1)
+                        .build();
+                usersTimetableRepo.save(timetable);
+            }
+        } catch (Exception e) {
+            System.err.println("[Timetable] Xatolik: " + e.getMessage());
+        }
+    }
+
+    /** Token ning SHA-256 hashini qaytaradi (64 hex belgi) */
+    private String sha256(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) {
+            // Fallback: token ning o'zini qaytaramiz (qisqartirilgan)
+            return input.length() > 64 ? input.substring(0, 64) : input;
+        }
+    }
+
+    /**
+     * Haqiqiy IP ni aniqlaydi.
+     * Proxy/load balancer orqali kelgan so'rovlarda X-Forwarded-For headerini tekshiradi.
+     */
+    private String extractIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
     }
 }
